@@ -128,7 +128,8 @@ function render(){
 }
 fillLangs();render();
 $("gLang").onchange=e=>{cfg.g=e.target.value;ls.set("g",cfg.g)};
-$("sLang").onchange=e=>{cfg.s=e.target.value;ls.set("s",cfg.s);fillLangs();render()};
+$("sLang").onchange=e=>{cfg.s=e.target.value;ls.set("s",cfg.s);fillLangs();render();
+  if(window._d&&window._d.replies&&$("heard").value.trim()){window._keep=window._d.replies.map(r=>r.guest);$("go").click()}};
 $("prov").onchange=e=>{stash();cfg.p=e.target.value;ls.set("p",cfg.p);render()};
 $("save").onclick=()=>{stash();cfg.info=$("info").value;ls.set("p",cfg.p);
   cfg.terms=$("terms").value;["key","model","keyG","modelG","info","terms"].forEach(k=>ls.set(k,cfg[k]));$("err").textContent="";alert(ui().saved)};
@@ -136,7 +137,7 @@ $("exp").onclick=()=>{const b=new Blob([JSON.stringify({info:$("info").value,ter
   const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="hotel-info.json";a.click()};
 $("imp").onclick=()=>$("file").click();
 $("file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(j.info)$("info").value=j.info;if(j.terms)$("terms").value=j.terms}catch(x){$("err").textContent=ui().fail}};
-$("clr").onclick=()=>{$("heard").value="";$("out").innerHTML="";$("err").textContent=""};
+$("clr").onclick=()=>{window._d=null;$("heard").value="";$("out").innerHTML="";$("err").textContent=""};
 
 /* Speech recognition */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,on=false,alts=[];
@@ -162,7 +163,7 @@ $("go").onclick=async()=>{
   if(!cfg[cur().k]){$("err").textContent=ui().noKey;return}
   $("err").textContent=ui().busy;$("go").disabled=true;
   const t0=Date.now(),tm=setInterval(()=>{$("err").textContent=ui().busy+" "+Math.round((Date.now()-t0)/1000)+"s"},1000);
-  const staff=nameOf(cfg.s);
+  const staff=nameOf(cfg.s);const keep=window._keep;window._keep=null;
   const guestHint=cfg.g==="auto"?"Detect the guest's language from the text.":`The guest likely speaks ${nameOf(cfg.g)}, but trust the text if it differs.`;
   const system=`You are a hotel front-desk reply assistant. A guest said something; the staff member (who speaks ${staff}) needs three reply options.
 ${guestHint}
@@ -173,7 +174,7 @@ Return ONLY valid JSON, no markdown:
 The three replies differ in approach: (1) polite and standard, (2) short and simple (easy for non-native speakers), (3) helpful with extra info or an alternative / confirmation question.
 Every reply MUST have a non-empty "staff" field: the full translation of that reply into ${staff} (never in the guest's language, never omitted).
 "pron" = how to read the guest-language reply aloud, written phonetically in the script of ${staff} (e.g. katakana for Japanese, hangul for Korean) so the staff can say it. Use "" only if the guest language is the same as ${staff}.
-GLOSSARY:
+${keep?"KEEP the guest-language replies EXACTLY as given below (same three, same order, unchanged). Only redo label, pron, staff, meaning and heard_fixed for the new staff language ("+staff+"). Guest replies: "+JSON.stringify(keep)+"\n":""}GLOSSARY:
 ${cfg.terms}
 HOTEL INFO:
 ${cfg.info}`;
@@ -201,7 +202,7 @@ ${cfg.info}`;
 };
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function show(d){
-  const u=ui();window._r=d.replies||[];
+  const u=ui();window._d=d;window._r=d.replies||[];
   const lc=d.guest_lang_code||"en";
   $("out").innerHTML=`<div class="gloss">${d.heard_fixed&&d.heard_fixed.trim()!==$("heard").value.trim()?`<span class="tag">${u.fix}</span><br>${esc(d.heard_fixed)}<br><br>`:""}<span class="tag">${u.said} (${esc(d.guest_lang_name||lc)})</span><br>${esc(d.meaning||"")}</div>`+
   window._r.map((r,i)=>`<div class="card"><div class="tag">${esc(r.label)}</div><div class="guest" lang="${esc(lc)}">${esc(r.guest)}</div>${r.pron?`<div class="pron" aria-label="pronunciation">🗣 ${esc(r.pron)}</div>`:""}<div class="staff"><span class="tag">${u.said}</span> ${esc(r.staff)}</div>
