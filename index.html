@@ -177,12 +177,12 @@ ${cfg.info}`;
   try{
     let raw;
     if(cfg.p==="g"){
-      const call=async th=>{const gc={responseMimeType:"application/json",maxOutputTokens:4000};if(th)gc.thinkingConfig={thinkingBudget:0};
+      const call=async gc=>{
         const r=await fetchT("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.modelG)+":generateContent",{method:"POST",headers:{"content-type":"application/json","x-goog-api-key":cfg.keyG},
           body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text}]}],generationConfig:gc})});
         return [r,await r.json()]};
-      let [r,d]=await call(true);
-      if(r.status===400&&/think/i.test(JSON.stringify(d)))[r,d]=await call(false);
+      const J={responseMimeType:"application/json",maxOutputTokens:4000};
+      let r,d;for(const gc of [{...J,thinkingConfig:{thinkingBudget:0}},J,{}]){[r,d]=await call(gc);if(r.status!==400)break}
       if(!r.ok)throw new Error(d.error&&d.error.message||r.status);
       raw=(((d.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||"").join("");
     }else{
