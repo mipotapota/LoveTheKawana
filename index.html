@@ -11,7 +11,11 @@
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.6 "Hiragino Sans","Noto Sans JP","Noto Sans KR",system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 main{max-width:720px;margin:0 auto;padding:16px}
-h1{font-size:20px;margin:8px 0 12px}
+.hero{position:relative;height:190px;border-radius:12px;overflow:hidden;margin-bottom:14px;background:#0b4d8c url(hero.jpg) center 62%/cover}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,20,15,.55))}
+.logo{position:absolute;left:12px;bottom:12px;z-index:1;background:#fff;border-radius:8px;padding:2px 8px;height:76px}
+.logo img{height:100%;display:block}
+h1{font-size:19px;margin:0 0 12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 label{font-size:13px;color:var(--sub);display:block;margin:8px 0 2px}
@@ -36,6 +40,7 @@ details summary{cursor:pointer;font-weight:600}
 </head>
 <body>
 <main>
+<div class="hero"><div class="logo"><img src="logo.png" alt="Kawana Hotel"></div></div>
 <h1 id="ttl"></h1>
 
 <section class="panel">
@@ -63,6 +68,8 @@ details summary{cursor:pointer;font-weight:600}
   <input type="password" id="key" autocomplete="off">
   <label id="lModel"></label>
   <input type="text" id="model">
+  <label id="lTerms"></label>
+  <textarea id="terms" rows="6"></textarea>
   <label id="lInfo"></label>
   <textarea id="info" rows="14"></textarea>
   <div class="row" style="margin-top:8px">
@@ -78,9 +85,12 @@ details summary{cursor:pointer;font-weight:600}
 <script>
 const LANGS=[["ja","日本語","ja-JP"],["en","English","en-US"],["ko","한국어","ko-KR"],["zh","中文(简体)","zh-CN"],["zh-TW","中文(繁體)","zh-TW"],["th","ไทย","th-TH"],["vi","Tiếng Việt","vi-VN"],["id","Bahasa Indonesia","id-ID"],["ms","Bahasa Melayu","ms-MY"],["tl","Filipino","fil-PH"],["hi","हिन्दी","hi-IN"],["es","Español","es-ES"],["fr","Français","fr-FR"],["de","Deutsch","de-DE"],["it","Italiano","it-IT"],["pt","Português","pt-BR"],["ru","Русский","ru-RU"],["ar","العربية","ar-SA"]];
 const UI={
-ja:{t:"接客返答アシスタント",g:"お客様の言語",s:"スタッフの言語",ph:"お客様の言葉がここに表示されます(直接入力も可)",go:"返答を作る",clr:"クリア",set:"設定(ホテル情報・APIキー)",key:"Anthropic APIキー",model:"モデル名",info:"ホテル情報(施設の場所・時間・ルール・FAQ)",save:"保存",exp:"書き出し",imp:"読み込み",saved:"保存しました",priv:"設定はこの端末のブラウザにのみ保存されます。お客様の氏名・部屋番号・カード情報は入力しないでください。AIの回答は必ずスタッフが内容を確認してから使ってください。",mic:"マイクは選択した「お客様の言語」で認識します。言語が分からない時は文字入力すれば自動判定します。",heard:"お客様の発言",said:"意味",speak:"読み上げ",copy:"コピー",noKey:"設定でAPIキーを入力してください",listen:"聞き取り中…",fail:"エラー",nomic:"このブラウザは音声認識に未対応です(Chrome/Safari推奨)。文字入力を使ってください。",auto:"自動判定(文字入力)",busy:"考え中…"},
-en:{t:"Guest Reply Assistant",g:"Guest language",s:"Staff language",ph:"The guest's words appear here (you can also type)",go:"Suggest replies",clr:"Clear",set:"Settings (hotel info, API key)",key:"Anthropic API key",model:"Model name",info:"Hotel info (locations, hours, rules, FAQ)",save:"Save",exp:"Export",imp:"Import",saved:"Saved",priv:"Settings stay in this browser only. Never enter guest names, room numbers or card details. Staff must review every AI reply before using it.",mic:"The mic recognizes the selected guest language. If unsure, type the text and the language is auto-detected.",heard:"Guest said",said:"Meaning",speak:"Speak",copy:"Copy",noKey:"Enter your API key in Settings",listen:"Listening…",fail:"Error",nomic:"Speech recognition isn't supported here (use Chrome/Safari). Type instead.",auto:"Auto-detect (typing)",busy:"Thinking…"},
-ko:{t:"고객 응대 어시스턴트",g:"손님 언어",s:"직원 언어",ph:"손님의 말이 여기에 표시됩니다(직접 입력 가능)",go:"답변 만들기",clr:"지우기",set:"설정(호텔 정보·API 키)",key:"Anthropic API 키",model:"모델 이름",info:"호텔 정보(위치·시간·규칙·FAQ)",save:"저장",exp:"내보내기",imp:"가져오기",saved:"저장했습니다",priv:"설정은 이 기기의 브라우저에만 저장됩니다. 손님 이름·객실 번호·카드 정보는 입력하지 마세요. AI 답변은 직원이 확인한 뒤 사용하세요.",mic:"마이크는 선택한 손님 언어로 인식합니다. 언어를 모를 땐 글자로 입력하면 자동 감지합니다.",heard:"손님 발언",said:"의미",speak:"읽기",copy:"복사",noKey:"설정에서 API 키를 입력하세요",listen:"듣는 중…",fail:"오류",nomic:"이 브라우저는 음성 인식을 지원하지 않습니다. 직접 입력하세요.",auto:"자동 감지(입력)",busy:"생각 중…"}};
+ja:{t:"接客返答アシスタント",g:"お客様の言語",s:"スタッフの言語",ph:"お客様の言葉がここに表示されます(直接入力も可)",go:"返答を作る",clr:"クリア",set:"設定(ホテル情報・APIキー)",key:"Anthropic APIキー",model:"モデル名",terms:"用語集(聞き間違えやすい言葉と正しい意味)",info:"ホテル情報(施設の場所・時間・ルール・FAQ)",save:"保存",exp:"書き出し",imp:"読み込み",saved:"保存しました",priv:"設定はこの端末のブラウザにのみ保存されます。お客様の氏名・部屋番号・カード情報は入力しないでください。AIの回答は必ずスタッフが内容を確認してから使ってください。",mic:"マイクは選択した「お客様の言語」で認識します。言語が分からない時は文字入力すれば自動判定します。",heard:"お客様の発言",fix:"聞き取り補正",said:"意味",speak:"読み上げ",copy:"コピー",noKey:"設定でAPIキーを入力してください",listen:"聞き取り中…",fail:"エラー",nomic:"このブラウザは音声認識に未対応です(Chrome/Safari推奨)。文字入力を使ってください。",auto:"自動判定(文字入力)",busy:"考え中…"},
+en:{t:"Guest Reply Assistant",g:"Guest language",s:"Staff language",ph:"The guest's words appear here (you can also type)",go:"Suggest replies",clr:"Clear",set:"Settings (hotel info, API key)",key:"Anthropic API key",model:"Model name",terms:"Glossary (often misheard words and what they mean)",info:"Hotel info (locations, hours, rules, FAQ)",save:"Save",exp:"Export",imp:"Import",saved:"Saved",priv:"Settings stay in this browser only. Never enter guest names, room numbers or card details. Staff must review every AI reply before using it.",mic:"The mic recognizes the selected guest language. If unsure, type the text and the language is auto-detected.",heard:"Guest said",fix:"Corrected transcript",said:"Meaning",speak:"Speak",copy:"Copy",noKey:"Enter your API key in Settings",listen:"Listening…",fail:"Error",nomic:"Speech recognition isn't supported here (use Chrome/Safari). Type instead.",auto:"Auto-detect (typing)",busy:"Thinking…"},
+ko:{t:"고객 응대 어시스턴트",g:"손님 언어",s:"직원 언어",ph:"손님의 말이 여기에 표시됩니다(직접 입력 가능)",go:"답변 만들기",clr:"지우기",set:"설정(호텔 정보·API 키)",key:"Anthropic API 키",model:"모델 이름",terms:"용어집(자주 잘못 인식되는 말과 정확한 뜻)",info:"호텔 정보(위치·시간·규칙·FAQ)",save:"저장",exp:"내보내기",imp:"가져오기",saved:"저장했습니다",priv:"설정은 이 기기의 브라우저에만 저장됩니다. 손님 이름·객실 번호·카드 정보는 입력하지 마세요. AI 답변은 직원이 확인한 뒤 사용하세요.",mic:"마이크는 선택한 손님 언어로 인식합니다. 언어를 모를 땐 글자로 입력하면 자동 감지합니다.",heard:"손님 발언",fix:"인식 보정",said:"의미",speak:"읽기",copy:"복사",noKey:"설정에서 API 키를 입력하세요",listen:"듣는 중…",fail:"오류",nomic:"이 브라우저는 음성 인식을 지원하지 않습니다. 직접 입력하세요.",auto:"자동 감지(입력)",busy:"생각 중…"}};
+const DEF_TERMS=`Golf Front / ゴルフフロント = ゴルフ受付カウンター(要書き換え)
+(例)Oshima = 大島(海の向こうに見える島)
+(誤認識されやすい言葉と正しい意味をここに足してください)`;
 const DEF_INFO=`【ホテル名】カワナホテル(例。実際の情報に書き換えてください)
 【チェックイン/アウト】IN 00:00 / OUT 00:00
 【朝食】場所:___ 時間:___ 料金:___
@@ -93,7 +103,7 @@ const DEF_INFO=`【ホテル名】カワナホテル(例。実際の情報に書
 【対応できないこと】料金交渉・個別予約変更などはフロントで確認`;
 const $=id=>document.getElementById(id);
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
-let cfg={key:ls.get("key")||"",model:ls.get("model")||"claude-sonnet-4-6",info:ls.get("info")||DEF_INFO,g:ls.get("g")||"en",s:ls.get("s")||"ja"};
+let cfg={key:ls.get("key")||"",model:ls.get("model")||"claude-sonnet-4-6",info:ls.get("info")||DEF_INFO,terms:ls.get("terms")||DEF_TERMS,g:ls.get("g")||"en",s:ls.get("s")||"ja"};
 const ui=()=>UI[cfg.s]||UI.en;
 function fillLangs(){
   $("gLang").innerHTML=`<option value="auto">${ui().auto}</option>`+LANGS.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join("");
@@ -107,28 +117,29 @@ function render(){
   $("sumSet").textContent=u.set;$("lKey").textContent=u.key;$("lModel").textContent=u.model;
   $("lInfo").textContent=u.info;$("save").textContent=u.save;$("exp").textContent=u.exp;$("imp").textContent=u.imp;
   $("priv").textContent=u.priv;$("micNote").textContent=u.mic;
-  $("key").value=cfg.key;$("model").value=cfg.model;$("info").value=cfg.info;
+  $("key").value=cfg.key;$("model").value=cfg.model;$("info").value=cfg.info;$("terms").value=cfg.terms;$("lTerms").textContent=u.terms;
 }
 fillLangs();render();
 $("gLang").onchange=e=>{cfg.g=e.target.value;ls.set("g",cfg.g)};
 $("sLang").onchange=e=>{cfg.s=e.target.value;ls.set("s",cfg.s);fillLangs();render()};
 $("save").onclick=()=>{cfg.key=$("key").value.trim();cfg.model=$("model").value.trim()||"claude-sonnet-4-6";cfg.info=$("info").value;
-  ["key","model","info"].forEach(k=>ls.set(k,cfg[k]));$("err").textContent="";alert(ui().saved)};
-$("exp").onclick=()=>{const b=new Blob([JSON.stringify({info:$("info").value},null,2)],{type:"application/json"});
+  cfg.terms=$("terms").value;["key","model","info","terms"].forEach(k=>ls.set(k,cfg[k]));$("err").textContent="";alert(ui().saved)};
+$("exp").onclick=()=>{const b=new Blob([JSON.stringify({info:$("info").value,terms:$("terms").value},null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="hotel-info.json";a.click()};
 $("imp").onclick=()=>$("file").click();
-$("file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(j.info){$("info").value=j.info}}catch(x){$("err").textContent=ui().fail}};
+$("file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(j.info)$("info").value=j.info;if(j.terms)$("terms").value=j.terms}catch(x){$("err").textContent=ui().fail}};
 $("clr").onclick=()=>{$("heard").value="";$("out").innerHTML="";$("err").textContent=""};
 
 /* Speech recognition */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,on=false;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,on=false,alts=[];
+$("heard").oninput=()=>{alts=[]};
 $("mic").onclick=()=>{
   if(!SR){$("err").textContent=ui().nomic;return}
   if(on){rec&&rec.stop();return}
   const g=cfg.g==="auto"?"en":cfg.g;
-  rec=new SR();rec.lang=(LANGS.find(l=>l[0]===g)||LANGS[1])[2];rec.interimResults=true;rec.continuous=false;
+  rec=new SR();rec.lang=(LANGS.find(l=>l[0]===g)||LANGS[1])[2];rec.interimResults=true;rec.maxAlternatives=3;rec.continuous=false;
   rec.onstart=()=>{on=true;$("mic").classList.add("on");$("err").textContent=ui().listen};
-  rec.onresult=e=>{$("heard").value=[...e.results].map(r=>r[0].transcript).join("")};
+  rec.onresult=e=>{$("heard").value=[...e.results].map(r=>r[0].transcript).join("");alts=[...e.results[0]].slice(1).map(a=>a.transcript)};
   rec.onerror=e=>{$("err").textContent=ui().fail+": "+e.error};
   rec.onend=()=>{on=false;$("mic").classList.remove("on");if($("err").textContent===ui().listen)$("err").textContent="";
     if($("heard").value.trim())$("go").click()};
@@ -146,10 +157,12 @@ $("go").onclick=async()=>{
   const system=`You are a hotel front-desk reply assistant. A guest said something; the staff member (who speaks ${staff}) needs three reply options.
 ${guestHint}
 Use ONLY the hotel info below for facts (places, hours, prices, rules). If the info does not cover it, do not invent: offer to check with the front desk/colleague instead.
-Speech recognition may contain errors; infer the most plausible meaning.
+The input comes from speech recognition (or typing) and often has mishearings, especially hotel/golf/Japanese place terms (e.g. "golf front" heard as "girlfriend"). First correct it using the GLOSSARY, the hotel info and the hotel context (a resort hotel with a golf course), then answer based on the corrected meaning.${alts.length?" Alternative recognitions: "+alts.join(" | "):""}
 Return ONLY valid JSON, no markdown:
-{"guest_lang_code":"<BCP47>","guest_lang_name":"<name>","meaning":"<what the guest said/wants, in ${staff}>","replies":[{"label":"<short label in ${staff}>","guest":"<reply in the guest's language>","staff":"<same reply in ${staff}>"}, x3]}
+{"guest_lang_code":"<BCP47>","guest_lang_name":"<name>","heard_fixed":"<corrected transcript in the guest's language>","meaning":"<what the guest said/wants, in ${staff}>","replies":[{"label":"<short label in ${staff}>","guest":"<reply in the guest's language>","staff":"<same reply in ${staff}>"}, x3]}
 The three replies differ in approach: (1) polite and standard, (2) short and simple (easy for non-native speakers), (3) helpful with extra info or an alternative / confirmation question.
+GLOSSARY:
+${cfg.terms}
 HOTEL INFO:
 ${cfg.info}`;
   try{
@@ -165,7 +178,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
 function show(d){
   const u=ui();window._r=d.replies||[];
   const lc=d.guest_lang_code||"en";
-  $("out").innerHTML=`<div class="gloss"><span class="tag">${u.said} (${esc(d.guest_lang_name||lc)})</span><br>${esc(d.meaning||"")}</div>`+
+  $("out").innerHTML=`<div class="gloss">${d.heard_fixed&&d.heard_fixed.trim()!==$("heard").value.trim()?`<span class="tag">${u.fix}</span><br>${esc(d.heard_fixed)}<br><br>`:""}<span class="tag">${u.said} (${esc(d.guest_lang_name||lc)})</span><br>${esc(d.meaning||"")}</div>`+
   window._r.map((r,i)=>`<div class="card"><div class="tag">${esc(r.label)}</div><div class="guest" lang="${esc(lc)}">${esc(r.guest)}</div><div class="staff">${esc(r.staff)}</div>
   <div class="row"><button data-s="${i}">🔊 ${u.speak}</button><button data-c="${i}">${u.copy}</button></div></div>`).join("");
   $("out").onclick=e=>{const b=e.target.closest("button");if(!b)return;
