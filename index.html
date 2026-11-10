@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -64,10 +64,13 @@ details summary{cursor:pointer;font-weight:600}
 
 <details class="panel">
   <summary id="sumSet"></summary>
+  <label id="lProv"></label>
+  <select id="prov"><option value="c">Claude (Anthropic)</option><option value="g">Gemini (Google, free tier)</option></select>
   <label id="lKey"></label>
   <input type="password" id="key" autocomplete="off">
   <label id="lModel"></label>
   <input type="text" id="model">
+  <p class="note" id="pnote"></p>
   <label id="lTerms"></label>
   <textarea id="terms" rows="6"></textarea>
   <label id="lInfo"></label>
@@ -85,9 +88,9 @@ details summary{cursor:pointer;font-weight:600}
 <script>
 const LANGS=[["ja","日本語","ja-JP"],["en","English","en-US"],["ko","한국어","ko-KR"],["zh","中文(简体)","zh-CN"],["zh-TW","中文(繁體)","zh-TW"],["th","ไทย","th-TH"],["vi","Tiếng Việt","vi-VN"],["id","Bahasa Indonesia","id-ID"],["ms","Bahasa Melayu","ms-MY"],["tl","Filipino","fil-PH"],["hi","हिन्दी","hi-IN"],["es","Español","es-ES"],["fr","Français","fr-FR"],["de","Deutsch","de-DE"],["it","Italiano","it-IT"],["pt","Português","pt-BR"],["ru","Русский","ru-RU"],["ar","العربية","ar-SA"]];
 const UI={
-ja:{t:"接客返答アシスタント",g:"お客様の言語",s:"スタッフの言語",ph:"お客様の言葉がここに表示されます(直接入力も可)",go:"返答を作る",clr:"クリア",set:"設定(ホテル情報・APIキー)",key:"Anthropic APIキー",model:"モデル名",terms:"用語集(聞き間違えやすい言葉と正しい意味)",info:"ホテル情報(施設の場所・時間・ルール・FAQ)",save:"保存",exp:"書き出し",imp:"読み込み",saved:"保存しました",priv:"設定はこの端末のブラウザにのみ保存されます。お客様の氏名・部屋番号・カード情報は入力しないでください。AIの回答は必ずスタッフが内容を確認してから使ってください。",mic:"マイクは選択した「お客様の言語」で認識します。言語が分からない時は文字入力すれば自動判定します。",heard:"お客様の発言",fix:"聞き取り補正",said:"意味",speak:"読み上げ",copy:"コピー",noKey:"設定でAPIキーを入力してください",listen:"聞き取り中…",fail:"エラー",nomic:"このブラウザは音声認識に未対応です(Chrome/Safari推奨)。文字入力を使ってください。",auto:"自動判定(文字入力)",busy:"考え中…"},
-en:{t:"Guest Reply Assistant",g:"Guest language",s:"Staff language",ph:"The guest's words appear here (you can also type)",go:"Suggest replies",clr:"Clear",set:"Settings (hotel info, API key)",key:"Anthropic API key",model:"Model name",terms:"Glossary (often misheard words and what they mean)",info:"Hotel info (locations, hours, rules, FAQ)",save:"Save",exp:"Export",imp:"Import",saved:"Saved",priv:"Settings stay in this browser only. Never enter guest names, room numbers or card details. Staff must review every AI reply before using it.",mic:"The mic recognizes the selected guest language. If unsure, type the text and the language is auto-detected.",heard:"Guest said",fix:"Corrected transcript",said:"Meaning",speak:"Speak",copy:"Copy",noKey:"Enter your API key in Settings",listen:"Listening…",fail:"Error",nomic:"Speech recognition isn't supported here (use Chrome/Safari). Type instead.",auto:"Auto-detect (typing)",busy:"Thinking…"},
-ko:{t:"고객 응대 어시스턴트",g:"손님 언어",s:"직원 언어",ph:"손님의 말이 여기에 표시됩니다(직접 입력 가능)",go:"답변 만들기",clr:"지우기",set:"설정(호텔 정보·API 키)",key:"Anthropic API 키",model:"모델 이름",terms:"용어집(자주 잘못 인식되는 말과 정확한 뜻)",info:"호텔 정보(위치·시간·규칙·FAQ)",save:"저장",exp:"내보내기",imp:"가져오기",saved:"저장했습니다",priv:"설정은 이 기기의 브라우저에만 저장됩니다. 손님 이름·객실 번호·카드 정보는 입력하지 마세요. AI 답변은 직원이 확인한 뒤 사용하세요.",mic:"마이크는 선택한 손님 언어로 인식합니다. 언어를 모를 땐 글자로 입력하면 자동 감지합니다.",heard:"손님 발언",fix:"인식 보정",said:"의미",speak:"읽기",copy:"복사",noKey:"설정에서 API 키를 입력하세요",listen:"듣는 중…",fail:"오류",nomic:"이 브라우저는 음성 인식을 지원하지 않습니다. 직접 입력하세요.",auto:"자동 감지(입력)",busy:"생각 중…"}};
+ja:{t:"接客返答アシスタント",g:"お客様の言語",s:"スタッフの言語",ph:"お客様の言葉がここに表示されます(直接入力も可)",go:"返答を作る",clr:"クリア",set:"設定(ホテル情報・APIキー)",key:"Anthropic APIキー",model:"モデル名",terms:"用語集(聞き間違えやすい言葉と正しい意味)",info:"ホテル情報(施設の場所・時間・ルール・FAQ)",save:"保存",exp:"書き出し",imp:"読み込み",saved:"保存しました",priv:"設定はこの端末のブラウザにのみ保存されます。お客様の氏名・部屋番号・カード情報は入力しないでください。AIの回答は必ずスタッフが内容を確認してから使ってください。",mic:"マイクは選択した「お客様の言語」で認識します。言語が分からない時は文字入力すれば自動判定します。",heard:"お客様の発言",fix:"聞き取り補正",free:"Gemini無料枠で送った内容は、Googleの製品改善に使われる可能性があります。氏名・部屋番号・カード情報は絶対に入力せず、会社の許可を確認してください。モデル名はGoogle AI Studioで確認した名前に変更できます。",said:"意味",speak:"読み上げ",copy:"コピー",noKey:"設定でAPIキーを入力してください",listen:"聞き取り中…",fail:"エラー",nomic:"このブラウザは音声認識に未対応です(Chrome/Safari推奨)。文字入力を使ってください。",auto:"自動判定(文字入力)",busy:"考え中…"},
+en:{t:"Guest Reply Assistant",g:"Guest language",s:"Staff language",ph:"The guest's words appear here (you can also type)",go:"Suggest replies",clr:"Clear",set:"Settings (hotel info, API key)",key:"Anthropic API key",model:"Model name",terms:"Glossary (often misheard words and what they mean)",info:"Hotel info (locations, hours, rules, FAQ)",save:"Save",exp:"Export",imp:"Import",saved:"Saved",priv:"Settings stay in this browser only. Never enter guest names, room numbers or card details. Staff must review every AI reply before using it.",mic:"The mic recognizes the selected guest language. If unsure, type the text and the language is auto-detected.",heard:"Guest said",fix:"Corrected transcript",free:"On the Gemini free tier, requests may be used to improve Google products. Never enter names, room numbers or card details, and check company policy. You can replace the model name with one shown in Google AI Studio.",said:"Meaning",speak:"Speak",copy:"Copy",noKey:"Enter your API key in Settings",listen:"Listening…",fail:"Error",nomic:"Speech recognition isn't supported here (use Chrome/Safari). Type instead.",auto:"Auto-detect (typing)",busy:"Thinking…"},
+ko:{t:"고객 응대 어시스턴트",g:"손님 언어",s:"직원 언어",ph:"손님의 말이 여기에 표시됩니다(직접 입력 가능)",go:"답변 만들기",clr:"지우기",set:"설정(호텔 정보·API 키)",key:"Anthropic API 키",model:"모델 이름",terms:"용어집(자주 잘못 인식되는 말과 정확한 뜻)",info:"호텔 정보(위치·시간·규칙·FAQ)",save:"저장",exp:"내보내기",imp:"가져오기",saved:"저장했습니다",priv:"설정은 이 기기의 브라우저에만 저장됩니다. 손님 이름·객실 번호·카드 정보는 입력하지 마세요. AI 답변은 직원이 확인한 뒤 사용하세요.",mic:"마이크는 선택한 손님 언어로 인식합니다. 언어를 모를 땐 글자로 입력하면 자동 감지합니다.",heard:"손님 발언",fix:"인식 보정",free:"Gemini 무료 티어로 보낸 내용은 Google 제품 개선에 사용될 수 있습니다. 이름·객실 번호·카드 정보는 절대 입력하지 말고 회사 허가를 확인하세요. 모델 이름은 Google AI Studio에서 확인한 이름으로 바꿀 수 있습니다.",said:"의미",speak:"읽기",copy:"복사",noKey:"설정에서 API 키를 입력하세요",listen:"듣는 중…",fail:"오류",nomic:"이 브라우저는 음성 인식을 지원하지 않습니다. 직접 입력하세요.",auto:"자동 감지(입력)",busy:"생각 중…"}};
 const DEF_TERMS=`Golf Front / ゴルフフロント = ゴルフ受付カウンター(要書き換え)
 (例)Oshima = 大島(海の向こうに見える島)
 (誤認識されやすい言葉と正しい意味をここに足してください)`;
@@ -103,8 +106,11 @@ const DEF_INFO=`【ホテル名】カワナホテル(例。実際の情報に書
 【対応できないこと】料金交渉・個別予約変更などはフロントで確認`;
 const $=id=>document.getElementById(id);
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
-let cfg={key:ls.get("key")||"",model:ls.get("model")||"claude-sonnet-4-6",info:ls.get("info")||DEF_INFO,terms:ls.get("terms")||DEF_TERMS,g:ls.get("g")||"en",s:ls.get("s")||"ja"};
+const DEFM={c:"claude-sonnet-4-6",g:"gemini-flash-latest"};
+let cfg={p:ls.get("p")||"c",key:ls.get("key")||"",model:ls.get("model")||DEFM.c,keyG:ls.get("keyG")||"",modelG:ls.get("modelG")||DEFM.g,info:ls.get("info")||DEF_INFO,terms:ls.get("terms")||DEF_TERMS,g:ls.get("g")||"en",s:ls.get("s")||"ja"};
 const ui=()=>UI[cfg.s]||UI.en;
+const cur=()=>cfg.p==="g"?{k:"keyG",m:"modelG"}:{k:"key",m:"model"};
+function stash(){const c=cur();cfg[c.k]=$("key").value.trim();cfg[c.m]=$("model").value.trim()||DEFM[cfg.p]}
 function fillLangs(){
   $("gLang").innerHTML=`<option value="auto">${ui().auto}</option>`+LANGS.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join("");
   $("sLang").innerHTML=LANGS.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join("");
@@ -114,16 +120,17 @@ function render(){
   const u=ui();document.documentElement.lang=cfg.s;
   $("ttl").textContent=u.t;$("lGuest").textContent=u.g;$("lStaff").textContent=u.s;
   $("heard").placeholder=u.ph;$("go").textContent=u.go;$("clr").textContent=u.clr;
-  $("sumSet").textContent=u.set;$("lKey").textContent=u.key;$("lModel").textContent=u.model;
+  $("sumSet").textContent=u.set;$("lProv").textContent="AI";$("prov").value=cfg.p;$("lKey").textContent=(cfg.p==="g"?"Gemini":"Anthropic")+" API key";$("lModel").textContent=u.model;$("pnote").textContent=cfg.p==="g"?u.free:"";
   $("lInfo").textContent=u.info;$("save").textContent=u.save;$("exp").textContent=u.exp;$("imp").textContent=u.imp;
   $("priv").textContent=u.priv;$("micNote").textContent=u.mic;
-  $("key").value=cfg.key;$("model").value=cfg.model;$("info").value=cfg.info;$("terms").value=cfg.terms;$("lTerms").textContent=u.terms;
+  $("key").value=cfg[cur().k];$("model").value=cfg[cur().m];$("info").value=cfg.info;$("terms").value=cfg.terms;$("lTerms").textContent=u.terms;
 }
 fillLangs();render();
 $("gLang").onchange=e=>{cfg.g=e.target.value;ls.set("g",cfg.g)};
 $("sLang").onchange=e=>{cfg.s=e.target.value;ls.set("s",cfg.s);fillLangs();render()};
-$("save").onclick=()=>{cfg.key=$("key").value.trim();cfg.model=$("model").value.trim()||"claude-sonnet-4-6";cfg.info=$("info").value;
-  cfg.terms=$("terms").value;["key","model","info","terms"].forEach(k=>ls.set(k,cfg[k]));$("err").textContent="";alert(ui().saved)};
+$("prov").onchange=e=>{stash();cfg.p=e.target.value;ls.set("p",cfg.p);render()};
+$("save").onclick=()=>{stash();cfg.info=$("info").value;ls.set("p",cfg.p);
+  cfg.terms=$("terms").value;["key","model","keyG","modelG","info","terms"].forEach(k=>ls.set(k,cfg[k]));$("err").textContent="";alert(ui().saved)};
 $("exp").onclick=()=>{const b=new Blob([JSON.stringify({info:$("info").value,terms:$("terms").value},null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="hotel-info.json";a.click()};
 $("imp").onclick=()=>$("file").click();
@@ -150,7 +157,7 @@ $("mic").onclick=()=>{
 const nameOf=c=>(LANGS.find(l=>l[0]===c)||[0,c])[1];
 $("go").onclick=async()=>{
   const text=$("heard").value.trim();if(!text)return;
-  if(!cfg.key){$("err").textContent=ui().noKey;return}
+  if(!cfg[cur().k]){$("err").textContent=ui().noKey;return}
   $("err").textContent=ui().busy;$("go").disabled=true;
   const staff=nameOf(cfg.s);
   const guestHint=cfg.g==="auto"?"Detect the guest's language from the text.":`The guest likely speaks ${nameOf(cfg.g)}, but trust the text if it differs.`;
@@ -166,10 +173,19 @@ ${cfg.terms}
 HOTEL INFO:
 ${cfg.info}`;
   try{
-    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":cfg.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-      body:JSON.stringify({model:cfg.model,max_tokens:1500,system,messages:[{role:"user",content:text}]})});
-    const d=await r.json();if(!r.ok)throw new Error(d.error&&d.error.message||r.status);
-    const raw=d.content.map(c=>c.text||"").join("").replace(/```json|```/g,"").trim();
+    let raw;
+    if(cfg.p==="g"){
+      const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.modelG)+":generateContent",{method:"POST",headers:{"content-type":"application/json","x-goog-api-key":cfg.keyG},
+        body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text}]}],generationConfig:{responseMimeType:"application/json",maxOutputTokens:4000}})});
+      const d=await r.json();if(!r.ok)throw new Error(d.error&&d.error.message||r.status);
+      raw=(((d.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||"").join("");
+    }else{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":cfg.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body:JSON.stringify({model:cfg.model,max_tokens:1500,system,messages:[{role:"user",content:text}]})});
+      const d=await r.json();if(!r.ok)throw new Error(d.error&&d.error.message||r.status);
+      raw=d.content.map(c=>c.text||"").join("");
+    }
+    raw=raw.replace(/```json|```/g,"").trim();
     show(JSON.parse(raw));$("err").textContent="";
   }catch(e){$("err").textContent=ui().fail+": "+e.message}
   $("go").disabled=false;
