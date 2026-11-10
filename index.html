@@ -31,7 +31,8 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 .card{border-left:5px solid var(--acc);background:var(--panel);border-radius:8px;border:1px solid var(--line);border-left-width:5px;padding:12px;margin-bottom:10px}
 .tag{font-size:13px;color:var(--sub)}
 .guest{font-size:22px;line-height:1.45;margin:4px 0;font-weight:600}
-.staff{color:var(--sub);font-size:14px;margin:2px 0 8px}
+.staff{color:var(--ink);font-size:16px;margin:4px 0 8px;padding:6px 8px;background:var(--soft);border-radius:6px}
+.pron{font-size:17px;color:var(--acc);margin:0 0 4px}
 .note{font-size:13px;color:var(--sub)}
 .err{color:var(--warn);font-size:14px}
 .gloss{background:var(--soft);border-radius:8px;padding:10px;margin-bottom:10px}
@@ -168,8 +169,10 @@ ${guestHint}
 Use ONLY the hotel info below for facts (places, hours, prices, rules). If the info does not cover it, do not invent: offer to check with the front desk/colleague instead.
 The input comes from speech recognition (or typing) and often has mishearings, especially hotel/golf/Japanese place terms (e.g. "golf front" heard as "girlfriend"). First correct it using the GLOSSARY, the hotel info and the hotel context (a resort hotel with a golf course), then answer based on the corrected meaning.${alts.length?" Alternative recognitions: "+alts.join(" | "):""}
 Return ONLY valid JSON, no markdown:
-{"guest_lang_code":"<BCP47>","guest_lang_name":"<name>","heard_fixed":"<corrected transcript in the guest's language>","meaning":"<what the guest said/wants, in ${staff}>","replies":[{"label":"<short label in ${staff}>","guest":"<reply in the guest's language>","staff":"<same reply in ${staff}>"}, x3]}
+{"guest_lang_code":"<BCP47>","guest_lang_name":"<name>","heard_fixed":"<corrected transcript in the guest's language>","meaning":"<what the guest said/wants, in ${staff}>","replies":[{"label":"<short label in ${staff}>","guest":"<reply in the guest's language>","pron":"<pronunciation>","staff":"<same reply translated into ${staff}>"}, x3]}
 The three replies differ in approach: (1) polite and standard, (2) short and simple (easy for non-native speakers), (3) helpful with extra info or an alternative / confirmation question.
+Every reply MUST have a non-empty "staff" field: the full translation of that reply into ${staff} (never in the guest's language, never omitted).
+"pron" = how to read the guest-language reply aloud, written phonetically in the script of ${staff} (e.g. katakana for Japanese, hangul for Korean) so the staff can say it. Use "" only if the guest language is the same as ${staff}.
 GLOSSARY:
 ${cfg.terms}
 HOTEL INFO:
@@ -187,7 +190,7 @@ ${cfg.info}`;
       raw=(((d.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||"").join("");
     }else{
       const r=await fetchT("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":cfg.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-        body:JSON.stringify({model:cfg.model,max_tokens:1500,system,messages:[{role:"user",content:text}]})});
+        body:JSON.stringify({model:cfg.model,max_tokens:2500,system,messages:[{role:"user",content:text}]})});
       const d=await r.json();if(!r.ok)throw new Error(d.error&&d.error.message||r.status);
       raw=d.content.map(c=>c.text||"").join("");
     }
@@ -201,7 +204,7 @@ function show(d){
   const u=ui();window._r=d.replies||[];
   const lc=d.guest_lang_code||"en";
   $("out").innerHTML=`<div class="gloss">${d.heard_fixed&&d.heard_fixed.trim()!==$("heard").value.trim()?`<span class="tag">${u.fix}</span><br>${esc(d.heard_fixed)}<br><br>`:""}<span class="tag">${u.said} (${esc(d.guest_lang_name||lc)})</span><br>${esc(d.meaning||"")}</div>`+
-  window._r.map((r,i)=>`<div class="card"><div class="tag">${esc(r.label)}</div><div class="guest" lang="${esc(lc)}">${esc(r.guest)}</div><div class="staff">${esc(r.staff)}</div>
+  window._r.map((r,i)=>`<div class="card"><div class="tag">${esc(r.label)}</div><div class="guest" lang="${esc(lc)}">${esc(r.guest)}</div>${r.pron?`<div class="pron" aria-label="pronunciation">🗣 ${esc(r.pron)}</div>`:""}<div class="staff"><span class="tag">${u.said}</span> ${esc(r.staff)}</div>
   <div class="row"><button data-s="${i}">🔊 ${u.speak}</button><button data-c="${i}">${u.copy}</button></div></div>`).join("");
   $("out").onclick=e=>{const b=e.target.closest("button");if(!b)return;
     if(b.dataset.s){speechSynthesis.cancel();const ut=new SpeechSynthesisUtterance(window._r[b.dataset.s].guest);ut.lang=lc;speechSynthesis.speak(ut)}
